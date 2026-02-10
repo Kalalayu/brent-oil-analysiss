@@ -1,71 +1,91 @@
-# backend/app.py
-from flask import Flask, jsonify, request
-import pandas as pd
-from pathlib import Path
-from flask_cors import CORS
+// frontend/src/App.js
+import React, { useEffect, useState } from "react";
+import {
+  LineChart, Line, XAxis, YAxis, Tooltip, CartesianGrid,
+  ReferenceDot, Legend, ResponsiveContainer
+} from "recharts";
+import "./App.css";
 
-app = Flask(__name__)
-CORS(app)
+function App() {
+  const [prices, setPrices] = useState([]);
+  const [events, setEvents] = useState([]);
+  const [categoryFilter, setCategoryFilter] = useState("All");
 
-# -----------------------------
-# Paths to data
-# -----------------------------
-BASE_DIR = Path(__file__).resolve().parent
-PRICES_PATH = BASE_DIR / "data" / "brent_prices.csv"
-EVENTS_PATH = BASE_DIR / "data" / "events.csv"
+  // Fetch prices
+  useEffect(() => {
+    fetch("http://127.0.0.1:5000/api/prices")
+      .then(res => res.json())
+      .then(data => {
+        const formatted = data.map(d => ({
+          ...d,
+          Date: new Date(d.Date).toISOString().slice(0,10)
+        }));
+        setPrices(formatted);
+      })
+      .catch(err => console.error("Error fetching prices:", err));
+  }, []);
 
-# -----------------------------
-# Load data
-# -----------------------------
-def load_prices():
-    df = pd.read_csv(PRICES_PATH, parse_dates=['Date'], dayfirst=True)
-    df = df.sort_values('Date')
-    return df
+  // Fetch events
+  useEffect(() => {
+    let url = "http://127.0.0.1:5000/api/events";
+    if (categoryFilter !== "All") url += `?category=${categoryFilter}`;
+    fetch(url)
+      .then(res => res.json())
+      .then(data => {
+        const formatted = data.map(d => ({
+          ...d,
+          Event_Date: new Date(d.Event_Date).toISOString().slice(0,10)
+        }));
+        setEvents(formatted);
+      })
+      .catch(err => console.error("Error fetching events:", err));
+  }, [categoryFilter]);
 
-def load_events():
-    df = pd.read_csv(EVENTS_PATH, parse_dates=['Event_Date'])
-    df = df.sort_values('Event_Date')
-    return df
+  const categories = ["All", "Geopolitical Conflict", "Economic Shock", "Political Instability"];
 
-# -----------------------------
-# Routes
-# -----------------------------
-@app.route("/")
-def home():
-    return "<h1>Brent Oil Analysis API</h1><p>Use /api/prices, /api/events, or /api/change-points</p>"
+  return (
+    <div className="App">
+      <h2>Brent Oil Prices with Key Events</h2>
 
-@app.route("/api/prices")
-def api_prices():
-    df = load_prices()
-    # Optional filtering by date range
-    start = request.args.get('start')
-    end = request.args.get('end')
-    if start:
-        df = df[df['Date'] >= start]
-    if end:
-        df = df[df['Date'] <= end]
-    return jsonify(df.to_dict(orient='records'))
+      {/* Filter */}
+      <label>
+        Filter Events by Category:{" "}
+        <select value={categoryFilter} onChange={e => setCategoryFilter(e.target.value)}>
+          {categories.map((c, i) => <option key={i} value={c}>{c}</option>)}
+        </select>
+      </label>
 
-@app.route("/api/events")
-def api_events():
-    df = load_events()
-    # Optional filtering by category
-    category = request.args.get('category')
-    if category:
-        df = df[df['Category'].str.lower() == category.lower()]
-    return jsonify(df.to_dict(orient='records'))
+      {/* Responsive chart */}
+      <ResponsiveContainer width="95%" height={500}>
+        <LineChart data={prices} margin={{ top: 50, right: 50, left: 20, bottom: 50 }}>
+          <XAxis dataKey="Date" />
+          <YAxis />
+          <Tooltip />
+          <CartesianGrid stroke="#ccc" />
+          <Line type="monotone" dataKey="Price" stroke="#8884d8" />
 
-@app.route("/api/change-points")
-def api_change_points():
-    # Example Bayesian change points
-    cps = [
-        {"date": "2008-09-15", "reason": "Global Financial Crisis"},
-        {"date": "2020-03-01", "reason": "COVID-19 shock"}
-    ]
-    return jsonify(cps)
+          {/* Event markers */}
+          {events.map((event, index) => {
+            const priceAtEvent = prices.find(p => p.Date === event.Event_Date)?.Price;
+            if (!priceAtEvent) return null;
+            return (
+              <ReferenceDot
+                key={index}
+                x={event.Event_Date}
+                y={priceAtEvent}
+                r={6}
+                fill="red"
+                stroke="none"
+                label={{ position: "top", value: event.Event_Description }}
+              />
+            );
+          })}
 
-# -----------------------------
-# Main
-# -----------------------------
-if __name__ == "__main__":
-    app.run(debug=True)
+          <Legend />
+        </LineChart>
+      </ResponsiveContainer>
+    </div>
+  );
+}
+
+export default App;
