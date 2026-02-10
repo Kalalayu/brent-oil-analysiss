@@ -1,53 +1,45 @@
-# backend/app.py
 from flask import Flask, jsonify
 import pandas as pd
 from pathlib import Path
 from flask_cors import CORS
 
-
 app = Flask(__name__)
 CORS(app)
 
 # -----------------------------
-# Paths to data
+# Paths
 # -----------------------------
 BASE_DIR = Path(__file__).resolve().parent
 PRICES_PATH = BASE_DIR / "data" / "brent_prices.csv"
 EVENTS_PATH = BASE_DIR / "data" / "events.csv"
 
 # -----------------------------
-# Load data
+# Load & cache data
 # -----------------------------
-def load_prices():
-    if not PRICES_PATH.exists():
-        raise FileNotFoundError(f"Brent prices CSV not found: {PRICES_PATH}")
-    df = pd.read_csv(PRICES_PATH, parse_dates=['Date'], dayfirst=True)
-    df = df.sort_values('Date')
-    return df
-
-def load_events():
-    if not EVENTS_PATH.exists():
-        raise FileNotFoundError(f"Events CSV not found: {EVENTS_PATH}")
-    df = pd.read_csv(EVENTS_PATH, parse_dates=['Event_Date'])
-    df = df.sort_values('Event_Date')
-    return df
+prices_df = pd.read_csv(PRICES_PATH, parse_dates=["Date"]).sort_values("Date")
+events_df = pd.read_csv(EVENTS_PATH, parse_dates=["Event_Date"]).sort_values("Event_Date")
 
 # -----------------------------
 # Routes
 # -----------------------------
 @app.route("/")
 def home():
-    return "<h1>Brent Oil Analysis API</h1><p>Use /api/prices or /api/events</p>"
+    return "<h2>Brent Oil Analysis API</h2><p>Use /api/prices, /api/events, /api/change-points</p>"
 
 @app.route("/api/prices")
-def api_prices():
-    df = load_prices()
-    return jsonify(df.to_dict(orient='records'))
+def prices():
+    return jsonify(prices_df.to_dict(orient="records"))
 
 @app.route("/api/events")
-def api_events():
-    df = load_events()
-    return jsonify(df.to_dict(orient='records'))
+def events():
+    return jsonify(events_df.to_dict(orient="records"))
+
+@app.route("/api/change-points")
+def change_points():
+    return jsonify([
+        {"date": "2008-09-15", "label": "Global Financial Crisis"},
+        {"date": "2020-03-01", "label": "COVID-19 Shock"}
+    ])
 
 # -----------------------------
 # Main
