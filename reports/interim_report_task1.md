@@ -1,30 +1,57 @@
-# Interim Report – Task 1  
-**Brent Oil Price Change Point Analysis**
+# Task 1: Brent Oil Analysis Documentation
 
-## Overview
-Task 1 establishes the analytical foundation for studying how major global events affect Brent crude oil prices. It focuses on data preparation, exploratory analysis, and event compilation to support later change point modeling and dashboard development.
+## 1. Project Overview
+**Brent Oil Analysis Project**  
+This project analyzes historical Brent oil prices and explores how key events (geopolitical, economic, and political) influenced price movements. The goal is to provide stakeholders with actionable insights through data visualization and predictive analysis.
 
-## Data
-- **Price Data:** Daily Brent oil prices (1987–2022)
-- **Event Data:** 13 key geopolitical, economic, and policy events with dates and categories
+---
 
-## Methodology
-- Cleaned and prepared time series data
-- Conducted exploratory data analysis
-- Computed log returns for volatility and stationarity assessment
-- Structured event dataset for contextual analysis
+## 2. Objectives
+- Collect and clean historical Brent oil price data.  
+- Identify and document major events affecting prices.  
+- Analyze trends, volatility, and correlations with events.  
+- Prepare datasets for downstream analysis (Tasks 2 & 3).
 
-## Key EDA Findings
-- Prices show long-term trends and sharp spikes during major crises  
-- Rolling averages reveal regime shifts  
-- Log returns exhibit volatility clustering  
-- Log returns appear stationary and suitable for change point modeling  
+---
 
-## Limitations
-- Event dates are approximate  
-- Multiple overlapping factors influence prices  
-- Correlation does not imply causation  
+## 3. Data Sources
 
-## Next Steps
-- **Task 2:** Apply Bayesian change point models to detect and quantify structural breaks and link them to events  
-- **Task 3:** Develop an interactive dashboard using Flask and React to visualize prices, change points, and event impacts
+| Dataset | Description | Source | Columns |
+|---------|------------|--------|---------|
+| `brent_prices.csv` | Historical Brent oil prices | Public datasets (EIA, Quandl) | Date, Price |
+| `events.csv` | Key events affecting oil prices | News archives / Wikipedia | Event_Date, Event_Description, Category |
+
+---
+
+## 4. Methodology
+
+### 4.1 Data Cleaning
+- Parsed dates consistently (day-first format for historical data).  
+- Sorted by date to maintain chronological order.  
+- Handled missing values and duplicates.  
+
+### 4.2 Data Analysis
+- Computed basic statistics: min, max, mean, volatility.  
+- Marked event dates for correlation with price trends.  
+- Identified potential change points (e.g., financial crises, geopolitical shocks).  
+
+### 4.3 Outputs for Task 2 & 3
+- Clean CSV files ready for backend API.  
+- JSON-ready structures for frontend visualization.
+
+---
+
+## 5. Observations / Insights
+- Brent prices showed sharp drops during major economic shocks.  
+- Geopolitical conflicts corresponded with sudden price spikes.  
+- Volatility increases were often event-driven.  
+
+---
+
+## 6. Next Steps
+- **Task 2**: Quantitative analysis and modeling (price forecasting, change-point detection).  
+- **Task 3**: Interactive dashboard to visualize price trends and events.
+
+---
+
+
